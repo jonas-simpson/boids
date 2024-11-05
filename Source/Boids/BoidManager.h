@@ -19,24 +19,60 @@ public:
 	// Sets default values for this actor's properties
 	ABoidManager();
 
-	// Number of BoidMembers to spawn and manage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 MemberPopulation;
-
-	// UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	// FVector Bounds;
-
+	//Actor Components --------------------------------------
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USceneComponent* Root;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UBoxComponent* Box;
 
+	
+	// Swarm influence variables ----------------------------
+	
+	// Number of BoidMembers to spawn and manage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MemberPopulation;
+
+	// Max Boid speed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxSpeed;
+
+	// Min Boid speed
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MinSpeed;
+
+	// Radius at which members observe neighbors for Alignment and Cohesion
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float VisualRange;
+
+	// Radius at which members observe neighbors for Avoidance
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ProtectedRange;
+
+	// Influence of Cohesion
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CenteringFactor;
+
+	// Influence of Separation
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AvoidFactor;
+
+	//Influence of Alignment
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MatchingFactor;
+
+	// Influence pushing members into Manager bounds
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float BoundsFactor;
+
 	void InitializeMembers();
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	UFUNCTION(BlueprintCallable)
+	void MoveAllMembers();
 
 private:
 	TArray<ABoidMember*> Members;

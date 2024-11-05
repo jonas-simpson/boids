@@ -21,6 +21,12 @@ public:
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
 	class UStaticMeshComponent* StaticMesh;
 
+	UFUNCTION(BlueprintCallable)
+	FVector GetV() { return V; }
+
+	UFUNCTION(BlueprintCallable)
+	void SetV(FVector NewV) { V = NewV;}
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -28,5 +34,10 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+private:
+	//Current Velocity
+	UPROPERTY()
+	FVector V;
 
 };

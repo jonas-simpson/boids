@@ -3,6 +3,8 @@
 
 #include "BoidManager.h"
 
+#include "Kismet/KismetMathLibrary.h"
+
 // Sets default values
 ABoidManager::ABoidManager()
 {
@@ -16,6 +18,18 @@ ABoidManager::ABoidManager()
 	Box->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform );
 	Box->SetBoxExtent(FVector(1000,1000,500));
 	Box->SetCollisionResponseToAllChannels(ECR_Ignore);
+	Box->SetHiddenInGame(false);
+	Box->SetMobility(EComponentMobility::Static);
+
+	MemberPopulation = 50;
+	MaxSpeed = 20;
+	MinSpeed = 5;
+	VisualRange = 750;
+	ProtectedRange = 100;
+	CenteringFactor = 0.005;
+	AvoidFactor = 0.05;
+	MatchingFactor = 0.5;
+	BoundsFactor = 0.5;	
 }
 
 
@@ -42,6 +56,69 @@ void ABoidManager::InitializeMembers()
 	for(int32 i = 0; i < MemberPopulation; i++)
 	{
 		ABoidMember* NewMember = GetWorld()->SpawnActor<ABoidMember>();
+
+		NewMember->SetActorLocation(UKismetMathLibrary::RandomPointInBoundingBox(Box->GetComponentLocation(),Box->GetUnscaledBoxExtent()));
+		
 		Members.Add(NewMember);
 	}
 }
+
+void ABoidManager::MoveAllMembers()
+{
+	//Look at every member
+	for (ABoidMember* B : Members)
+	{
+		FVector CloseDelta, SeparationV, AvgNeighborV, AlignmentV, AvgNeighborL, CohesionV {0,0,0};
+		int32 NumNeighbors {0};
+		FVector BV = B->GetV();
+		FVector BL = B->GetActorLocation();
+		
+		//Compare to every other member
+		for (ABoidMember* Other : Members)
+		{
+			if(B!=Other)
+			{
+				FVector OV = Other->GetV();
+				FVector OL = Other->GetActorLocation();
+				float Distance = UKismetMathLibrary::Vector_Distance(BL,OL);
+
+				//Check if other member is within my protected range
+				if(Distance < ProtectedRange)
+				{
+					//Separation
+					CloseDelta += BL - OL;
+				}
+				//Check if other member is within observable range
+				else if(Distance < VisualRange)
+				{
+					NumNeighbors++;
+
+					//Alignment
+					AvgNeighborV += OV;
+
+					//Cohesion
+					AvgNeighborL += OL;
+				}
+			}
+		}
+
+		//Separation
+		SeparationV = CloseDelta * AvoidFactor;
+		if(NumNeighbors > 0)
+		{
+			//Alignment
+			AvgNeighborV /= NumNeighbors;
+			AlignmentV = (AvgNeighborV - BV) * MatchingFactor;
+
+			//Cohesion
+			AvgNeighborL /= NumNeighbors;
+			CohesionV = (AvgNeighborL - BL) * CenteringFactor;
+
+			BV += AlignmentV + CohesionV;
+		}
+
+		BV += SeparationV;
+		
+	}
+}
+
