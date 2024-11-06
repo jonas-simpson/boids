@@ -22,14 +22,17 @@ ABoidManager::ABoidManager()
 	Box->SetMobility(EComponentMobility::Static);
 
 	MemberPopulation = 50;
-	MaxSpeed = 20;
-	MinSpeed = 5;
-	VisualRange = 750;
+	MaxSpeed = 10;
+	MinSpeed = 1;
+	VisualRange = 500;
 	ProtectedRange = 100;
-	CenteringFactor = 0.005;
-	AvoidFactor = 0.05;
-	MatchingFactor = 0.5;
-	BoundsFactor = 0.5;	
+	CenteringFactor = 0.0005;
+	AvoidFactor = 0.005;
+	MatchingFactor = 0.005;
+	BoundsFactor = 0.1;
+
+	ShouldStart = false;
+	TimerDelay = 0.5;
 }
 
 
@@ -40,15 +43,22 @@ void ABoidManager::BeginPlay()
 	Super::BeginPlay();
 
 	InitializeMembers();
+
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, this, &ABoidManager::TimerElapsed, TimerDelay, false);
+
+	
 	
 }
+
 
 // Called every frame
 void ABoidManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	MoveAllMembers();
+	if(ShouldStart)
+		MoveAllMembers();
 
 }
 
@@ -75,9 +85,10 @@ void ABoidManager::MoveAllMembers()
 	//Look at every member
 	for (ABoidMember* B : Members)
 	{
-		FVector CloseDelta, SeparationV, AvgNeighborV, AlignmentV, AvgNeighborL, CohesionV {0,0,0};
+		FVector CloseDelta {0,0,0}, SeparationV {0,0,0}, AvgNeighborV {0,0,0}, AlignmentV {0,0,0}, AvgNeighborL {0,0,0}, CohesionV {0,0,0};
 		int32 NumNeighbors {0};
-		FVector BV = B->GetV();
+		//FVector BV = B->GetV();
+		FVector BV {0,0,0};
 		FVector BL = B->GetActorLocation();
 		
 		//Compare to every other member
@@ -87,7 +98,7 @@ void ABoidManager::MoveAllMembers()
 			{
 				FVector OV = Other->GetV();
 				FVector OL = Other->GetActorLocation();
-				float Distance = UKismetMathLibrary::Vector_Distance(BL,OL);
+				float Distance = UKismetMathLibrary::Abs(UKismetMathLibrary::Vector_Distance(BL,OL));
 
 				//Check if other member is within my protected range
 				if(Distance < ProtectedRange)
@@ -95,6 +106,7 @@ void ABoidManager::MoveAllMembers()
 					//Separation
 					CloseDelta += BL - OL;
 				}
+				
 				//Check if other member is within observable range
 				else if(Distance < VisualRange)
 				{
@@ -111,6 +123,7 @@ void ABoidManager::MoveAllMembers()
 
 		//Separation
 		SeparationV = CloseDelta * AvoidFactor;
+		
 		if(NumNeighbors > 0)
 		{
 			//Alignment
@@ -121,39 +134,41 @@ void ABoidManager::MoveAllMembers()
 			AvgNeighborL /= NumNeighbors;
 			CohesionV = (AvgNeighborL - BL) * CenteringFactor;
 
-			BV += AlignmentV + CohesionV;
+			//BV += AlignmentV + CohesionV;
 		}
 
-		BV += SeparationV;
+		//BV += SeparationV;
 
 		//Apply boundary force
 		FVector BoundaryV;
-		if(BL.X > Box->GetComponentLocation().X+Box->Bounds.BoxExtent.X)
+		if(BL.X > Box->GetComponentLocation().X+Box->GetUnscaledBoxExtent().X)
 		{
 			BoundaryV.X = -BoundsFactor;
 		}
-		else if(BL.X < Box->GetComponentLocation().X-Box->Bounds.BoxExtent.X)
+		else if(BL.X < Box->GetComponentLocation().X-Box->GetUnscaledBoxExtent().X)
 		{
 			BoundaryV.X = BoundsFactor;
 		}
-		if(BL.Y > Box->GetComponentLocation().Y+Box->Bounds.BoxExtent.Y)
+		if(BL.Y > Box->GetComponentLocation().Y+Box->GetUnscaledBoxExtent().Y)
 		{
 			BoundaryV.Y = -BoundsFactor;
 		}
-		else if(BL.Y < Box->GetComponentLocation().Y-Box->Bounds.BoxExtent.Y)
+		else if(BL.Y < Box->GetComponentLocation().Y-Box->GetUnscaledBoxExtent().Y)
 		{
 			BoundaryV.Y = BoundsFactor;
 		}
-		if(BL.Z > Box->GetComponentLocation().Z+Box->Bounds.BoxExtent.Z)
+		if(BL.Z > Box->GetComponentLocation().Z+Box->GetUnscaledBoxExtent().Z)
 		{
 			BoundaryV.Z = -BoundsFactor;
 		}
-		else if(BL.Z < Box->GetComponentLocation().Z-Box->Bounds.BoxExtent.Z)
+		else if(BL.Z < Box->GetComponentLocation().Z-Box->GetUnscaledBoxExtent().Z)
 		{
 			BoundaryV.Z = BoundsFactor;
 		}
 
-		BV += BoundaryV;
+		//BV += BoundaryV;
+
+		BV = B->GetV() + CohesionV + AlignmentV + SeparationV + BoundaryV;
 
 		//Check speed & confine within limits
 		if(BV.Length() > MaxSpeed)
@@ -168,7 +183,11 @@ void ABoidManager::MoveAllMembers()
 		//Apply new velocity and update position!
 		B->SetV(BV);
 		B->UpdateLocation();
-		
 	}
 }
+void ABoidManager::TimerElapsed()
+{
+	ShouldStart = true;
+}
+
 

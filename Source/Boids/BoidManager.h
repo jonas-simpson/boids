@@ -79,6 +79,9 @@ protected:
 
 private:
 	TArray<ABoidMember*> Members;
+	bool ShouldStart;
+	void TimerElapsed();
+	float TimerDelay;
 
 public:	
 	// Called every frame

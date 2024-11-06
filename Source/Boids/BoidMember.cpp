@@ -3,6 +3,8 @@
 
 #include "BoidMember.h"
 
+#include "Kismet/KismetMathLibrary.h"
+
 // Sets default values
 ABoidMember::ABoidMember()
 {
@@ -11,6 +13,8 @@ ABoidMember::ABoidMember()
 
 	//StaticMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMesh"));
 	//SetRootComponent(StaticMesh);
+
+	SetV(UKismetMathLibrary::RandomUnitVector()*10);
 
 }
 
@@ -25,6 +29,9 @@ void ABoidMember::BeginPlay()
 void ABoidMember::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Face move direction
+	SetActorRotation(UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), GetActorLocation() + GetV()));
 
 }
 
