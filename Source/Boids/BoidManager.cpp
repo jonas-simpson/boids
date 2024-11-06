@@ -141,7 +141,7 @@ void ABoidManager::MoveAllMembers()
 		FVector BoundaryV = GetBoundaryForce(BL);
 
 		//Apply all forces to current velocity
-		BV = B->GetV() + CohesionV + AlignmentV + SeparationV + BoundaryV;
+		BV = (B->GetV() + CohesionV + AlignmentV + SeparationV + BoundaryV);
 
 		//Check speed & confine within limits
 		BV = ClampToSpeed(BV);

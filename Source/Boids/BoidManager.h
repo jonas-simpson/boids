@@ -37,11 +37,11 @@ public:
 	int32 MemberPopulation;
 
 	// Max Boid speed
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 5, UIMax = 20))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 5, UIMax = 100))
 	float MaxSpeed;
 
 	// Min Boid speed
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 10))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 25))
 	float MinSpeed;
 
 	// Radius at which members observe neighbors for Alignment and Cohesion
