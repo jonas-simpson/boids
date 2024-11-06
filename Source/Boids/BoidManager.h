@@ -20,11 +20,14 @@ public:
 	ABoidManager();
 
 	//Actor Components --------------------------------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	USceneComponent* Root;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	UBoxComponent* Box;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<ABoidMember> BoidBP;
 
 	
 	// Swarm influence variables ----------------------------

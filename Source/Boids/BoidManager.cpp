@@ -48,6 +48,8 @@ void ABoidManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	MoveAllMembers();
+
 }
 
 void ABoidManager::InitializeMembers()
@@ -55,9 +57,14 @@ void ABoidManager::InitializeMembers()
 	// Create a new Boid Member to add to our array and set its initial position
 	for(int32 i = 0; i < MemberPopulation; i++)
 	{
-		ABoidMember* NewMember = GetWorld()->SpawnActor<ABoidMember>();
+		FVector SpawnLoc = UKismetMathLibrary::RandomPointInBoundingBox(Box->GetComponentLocation(),Box->GetUnscaledBoxExtent());
+		FRotator SpawnRot = UKismetMathLibrary::RandomRotator();
+		FActorSpawnParameters SpawnParams;
 
-		NewMember->SetActorLocation(UKismetMathLibrary::RandomPointInBoundingBox(Box->GetComponentLocation(),Box->GetUnscaledBoxExtent()));
+		
+		ABoidMember* NewMember = GetWorld()->SpawnActor<ABoidMember>(BoidBP, SpawnLoc, SpawnRot, SpawnParams);
+
+		//NewMember->SetActorLocation(UKismetMathLibrary::RandomPointInBoundingBox(Box->GetComponentLocation(),Box->GetUnscaledBoxExtent()));
 		
 		Members.Add(NewMember);
 	}
@@ -118,6 +125,49 @@ void ABoidManager::MoveAllMembers()
 		}
 
 		BV += SeparationV;
+
+		//Apply boundary force
+		FVector BoundaryV;
+		if(BL.X > Box->GetComponentLocation().X+Box->Bounds.BoxExtent.X)
+		{
+			BoundaryV.X = -BoundsFactor;
+		}
+		else if(BL.X < Box->GetComponentLocation().X-Box->Bounds.BoxExtent.X)
+		{
+			BoundaryV.X = BoundsFactor;
+		}
+		if(BL.Y > Box->GetComponentLocation().Y+Box->Bounds.BoxExtent.Y)
+		{
+			BoundaryV.Y = -BoundsFactor;
+		}
+		else if(BL.Y < Box->GetComponentLocation().Y-Box->Bounds.BoxExtent.Y)
+		{
+			BoundaryV.Y = BoundsFactor;
+		}
+		if(BL.Z > Box->GetComponentLocation().Z+Box->Bounds.BoxExtent.Z)
+		{
+			BoundaryV.Z = -BoundsFactor;
+		}
+		else if(BL.Z < Box->GetComponentLocation().Z-Box->Bounds.BoxExtent.Z)
+		{
+			BoundaryV.Z = BoundsFactor;
+		}
+
+		BV += BoundaryV;
+
+		//Check speed & confine within limits
+		if(BV.Length() > MaxSpeed)
+		{
+			BV = BV.GetSafeNormal() * MaxSpeed;
+		}
+		else if(BV.Length() < MinSpeed)
+		{
+			BV = BV.GetSafeNormal() * MinSpeed;
+		}
+
+		//Apply new velocity and update position!
+		B->SetV(BV);
+		B->UpdateLocation();
 		
 	}
 }
