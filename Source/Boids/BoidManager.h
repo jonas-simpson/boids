@@ -20,10 +20,10 @@ public:
 	ABoidManager();
 
 	//Actor Components --------------------------------------
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	USceneComponent* Root;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	UBoxComponent* Box;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -33,39 +33,39 @@ public:
 	// Swarm influence variables ----------------------------
 	
 	// Number of BoidMembers to spawn and manage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 5, UIMax = 100))
 	int32 MemberPopulation;
 
 	// Max Boid speed
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 5, UIMax = 20))
 	float MaxSpeed;
 
 	// Min Boid speed
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 10))
 	float MinSpeed;
 
 	// Radius at which members observe neighbors for Alignment and Cohesion
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 300, UIMax = 1000))
 	float VisualRange;
 
 	// Radius at which members observe neighbors for Avoidance
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 50, UIMax = 300))
 	float ProtectedRange;
 
 	// Influence of Cohesion
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 0.05))
 	float CenteringFactor;
 
 	// Influence of Separation
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 0.05))
 	float AvoidFactor;
 
 	//Influence of Alignment
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 0.05))
 	float MatchingFactor;
 
 	// Influence pushing members into Manager bounds
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(UIMin = 0, UIMax = 0.5))
 	float BoundsFactor;
 
 	void InitializeMembers();
