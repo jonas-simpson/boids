@@ -11,6 +11,7 @@ ABoidManager::ABoidManager()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//Init components
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
 	SetRootComponent(Root);
 
@@ -21,6 +22,7 @@ ABoidManager::ABoidManager()
 	Box->SetHiddenInGame(false);
 	Box->SetMobility(EComponentMobility::Static);
 
+	//Init variables
 	MemberPopulation = 50;
 	MaxSpeed = 10;
 	MinSpeed = 1;
@@ -31,6 +33,7 @@ ABoidManager::ABoidManager()
 	MatchingFactor = 0.005;
 	BoundsFactor = 0.1;
 
+	//Setup timer
 	ShouldStart = false;
 	TimerDelay = 0.5;
 }
@@ -44,12 +47,12 @@ void ABoidManager::BeginPlay()
 
 	InitializeMembers();
 
+	//Start moving Boids after they have all spawned
 	FTimerHandle TimerHandle;
 	GetWorldTimerManager().SetTimer(TimerHandle, this, &ABoidManager::TimerElapsed, TimerDelay, false);
-
-	
-	
 }
+
+
 
 
 // Called every frame
@@ -59,7 +62,6 @@ void ABoidManager::Tick(float DeltaTime)
 
 	if(ShouldStart)
 		MoveAllMembers();
-
 }
 
 void ABoidManager::InitializeMembers()
@@ -133,52 +135,16 @@ void ABoidManager::MoveAllMembers()
 			//Cohesion
 			AvgNeighborL /= NumNeighbors;
 			CohesionV = (AvgNeighborL - BL) * CenteringFactor;
-
-			//BV += AlignmentV + CohesionV;
 		}
-
-		//BV += SeparationV;
 
 		//Apply boundary force
-		FVector BoundaryV;
-		if(BL.X > Box->GetComponentLocation().X+Box->GetUnscaledBoxExtent().X)
-		{
-			BoundaryV.X = -BoundsFactor;
-		}
-		else if(BL.X < Box->GetComponentLocation().X-Box->GetUnscaledBoxExtent().X)
-		{
-			BoundaryV.X = BoundsFactor;
-		}
-		if(BL.Y > Box->GetComponentLocation().Y+Box->GetUnscaledBoxExtent().Y)
-		{
-			BoundaryV.Y = -BoundsFactor;
-		}
-		else if(BL.Y < Box->GetComponentLocation().Y-Box->GetUnscaledBoxExtent().Y)
-		{
-			BoundaryV.Y = BoundsFactor;
-		}
-		if(BL.Z > Box->GetComponentLocation().Z+Box->GetUnscaledBoxExtent().Z)
-		{
-			BoundaryV.Z = -BoundsFactor;
-		}
-		else if(BL.Z < Box->GetComponentLocation().Z-Box->GetUnscaledBoxExtent().Z)
-		{
-			BoundaryV.Z = BoundsFactor;
-		}
+		FVector BoundaryV = GetBoundaryForce(BL);
 
-		//BV += BoundaryV;
-
+		//Apply all forces to current velocity
 		BV = B->GetV() + CohesionV + AlignmentV + SeparationV + BoundaryV;
 
 		//Check speed & confine within limits
-		if(BV.Length() > MaxSpeed)
-		{
-			BV = BV.GetSafeNormal() * MaxSpeed;
-		}
-		else if(BV.Length() < MinSpeed)
-		{
-			BV = BV.GetSafeNormal() * MinSpeed;
-		}
+		BV = ClampToSpeed(BV);
 
 		//Apply new velocity and update position!
 		B->SetV(BV);
@@ -188,6 +154,54 @@ void ABoidManager::MoveAllMembers()
 void ABoidManager::TimerElapsed()
 {
 	ShouldStart = true;
+}
+
+FVector ABoidManager::GetBoundaryForce(FVector BoidLoc) const
+{
+	FVector Influence{0,0,0};
+	if(BoidLoc.X > Box->GetComponentLocation().X+Box->GetUnscaledBoxExtent().X)
+	{
+		Influence.X = -BoundsFactor;
+	}
+	else if(BoidLoc.X < Box->GetComponentLocation().X-Box->GetUnscaledBoxExtent().X)
+	{
+		Influence.X = BoundsFactor;
+	}
+	if(BoidLoc.Y > Box->GetComponentLocation().Y+Box->GetUnscaledBoxExtent().Y)
+	{
+		Influence.Y = -BoundsFactor;
+	}
+	else if(BoidLoc.Y < Box->GetComponentLocation().Y-Box->GetUnscaledBoxExtent().Y)
+	{
+		Influence.Y = BoundsFactor;
+	}
+	if(BoidLoc.Z > Box->GetComponentLocation().Z+Box->GetUnscaledBoxExtent().Z)
+	{
+		Influence.Z = -BoundsFactor;
+	}
+	else if(BoidLoc.Z < Box->GetComponentLocation().Z-Box->GetUnscaledBoxExtent().Z)
+	{
+		Influence.Z = BoundsFactor;
+	}
+
+	return Influence;
+}
+
+FVector ABoidManager::ClampToSpeed(FVector BoidVel) const
+{
+	FVector ClampedVel = BoidVel;
+	
+	//Check speed & confine within limits
+	if(ClampedVel.Length() > MaxSpeed)
+	{
+		ClampedVel = ClampedVel.GetSafeNormal() * MaxSpeed;
+	}
+	else if(ClampedVel.Length() < MinSpeed)
+	{
+		ClampedVel = ClampedVel.GetSafeNormal() * MinSpeed;
+	}
+
+	return ClampedVel;
 }
 
 

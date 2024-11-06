@@ -83,6 +83,10 @@ private:
 	void TimerElapsed();
 	float TimerDelay;
 
+	UFUNCTION(BlueprintCallable)
+	FVector GetBoundaryForce(FVector BoidLoc) const;
+	FVector ClampToSpeed(FVector BoidVel) const;
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
